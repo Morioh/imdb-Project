@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>IMDb Schema: ER Diagram</title>
+<style>
+:root{--bg:#FAF9F5;--paper:#FFFFFF;--ink:#1F1E1D;--muted:#5E5D59;--rust:#CC785C;--line:#E5E1D8;--rel:#8A8780;
+ box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1E1D1B;--paper:#262523;--ink:#ECEAE4;--muted:#B0ADA5;--line:#3A3835;--rel:#8F8C85;}}
+:root[data-theme="dark"]{--bg:#1E1D1B;--paper:#262523;--ink:#ECEAE4;--muted:#B0ADA5;--line:#3A3835;--rel:#8F8C85;}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;line-height:1.6;}
+main{max-width:1260px;margin:0 auto;padding:36px 20px 70px;}
+h1{font-family:Georgia,"Times New Roman",serif;font-weight:normal;font-size:2rem;margin:0 0 8px;}
+h2{font-family:Georgia,"Times New Roman",serif;font-weight:normal;color:var(--rust);font-size:1.35rem;margin:36px 0 10px;}
+p,li{max-width:75ch;}
+.wrap{overflow-x:auto;background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:12px;}
+svg{display:block;min-width:1000px;width:100%;height:auto;}
+.box{fill:var(--paper);stroke:var(--rel);stroke-width:1.2;}
+.hdr{fill:var(--rust);}
+.hname{fill:#FFFFFF;font:600 14px Georgia,"Times New Roman",serif;}
+.col{fill:var(--ink);font:13px -apple-system,"Segoe UI",Helvetica,Arial,sans-serif;}
+.key{fill:var(--rust);font:600 12px -apple-system,"Segoe UI",Helvetica,Arial,sans-serif;}
+.sep{stroke:var(--line);}
+.rel{fill:none;stroke:var(--rel);stroke-width:1.5;}
+.mk{fill:none;stroke:var(--rel);stroke-width:1.5;}
+.lbl{fill:var(--muted);font:italic 12px -apple-system,"Segoe UI",Helvetica,Arial,sans-serif;}
+table{border-collapse:collapse;background:var(--paper);font-size:.94rem;}
+th,td{border:1px solid var(--line);padding:6px 12px;text-align:left;vertical-align:middle;}
+th{background:var(--bg);}
+code{font-family:Menlo,Consolas,monospace;font-size:.88em;}
+</style></head><body><main>
+<h1>IMDb Schema: ER Diagram</h1>
+<p>Eleven tables. <code>title</code> and <code>person</code> are the two central entities. Every foreign key sits on the "many" side and points to the "one" side's primary key.</p>
+<div class="wrap">
+<svg viewBox="0 0 1180 770" role="img" aria-label="ER diagram of the IMDb schema">
+<defs>
+<marker id="many" viewBox="0 0 14 14" refX="14" refY="7" markerWidth="14" markerHeight="14" markerUnits="userSpaceOnUse" orient="auto-start-reverse">
+<path class="mk" d="M0,7 L14,1 M0,7 L14,13 M0,7 L14,7"/></marker>
+<marker id="one" viewBox="0 0 14 14" refX="14" refY="7" markerWidth="14" markerHeight="14" markerUnits="userSpaceOnUse" orient="auto-start-reverse">
+<path class="mk" d="M5,1 L5,13 M9,1 L9,13 M0,7 L14,7"/></marker>
+</defs>
+<path class="rel" d="M330,330 H160 V268" marker-start="url(#one)" marker-end="url(#many)"/>
+<path class="rel" d="M330,470 H120 V560" marker-start="url(#one)" marker-end="url(#one)"/>
+<path class="rel" d="M330,500 H200 V560" marker-start="url(#one)" marker-end="url(#many)"/>
+<path class="rel" d="M450,300 V124" marker-start="url(#one)" marker-end="url(#many)"/>
+<path class="rel" d="M450,528 V640" marker-start="url(#one)" marker-end="url(#one)"/>
+<path class="rel" d="M570,320 H585 V130 H620" marker-start="url(#one)" marker-end="url(#many)"/>
+<path class="rel" d="M570,345 H600 V302 H620" marker-start="url(#one)" marker-end="url(#many)"/>
+<path class="rel" d="M570,412 H620" marker-start="url(#one)" marker-end="url(#many)"/>
+<path class="rel" d="M570,470 H605 V522 H620" marker-start="url(#one)" marker-end="url(#many)"/>
+<path class="rel" d="M910,315 H895 V130 H860" marker-start="url(#one)" marker-end="url(#many)"/>
+<path class="rel" d="M910,340 H880 V302 H860" marker-start="url(#one)" marker-end="url(#many)"/>
+<path class="rel" d="M910,412 H860" marker-start="url(#one)" marker-end="url(#many)"/>
+<path class="rel" d="M910,425 H885 V522 H860" marker-start="url(#one)" marker-end="url(#many)"/>
+<path class="rel" d="M1030,300 V204" marker-start="url(#one)" marker-end="url(#many)"/>
+<text class="lbl" x="128" y="463">tconst (1:1)</text>
+<text class="lbl" x="208" y="493">parentTconst</text>
+<g><rect class="box" x="40" y="40" width="240" height="228" rx="4"/>
+<path class="hdr" d="M44,40 H276 Q280,40 280,44 V70 H40 V44 Q40,40 44,40 Z"/>
+<text class="hname" x="52" y="60">title_aka</text>
+<text class="col" x="52" y="87">titleId</text>
+<text class="key" x="268" y="87" text-anchor="end">PK FK</text>
+<line class="sep" x1="40" x2="280" y1="94" y2="94"/>
+<text class="col" x="52" y="111">ordering</text>
+<text class="key" x="268" y="111" text-anchor="end">PK</text>
+<line class="sep" x1="40" x2="280" y1="118" y2="118"/>
+<text class="col" x="52" y="135">title</text>
+<line class="sep" x1="40" x2="280" y1="142" y2="142"/>
+<text class="col" x="52" y="159">region</text>
+<line class="sep" x1="40" x2="280" y1="166" y2="166"/>
+<text class="col" x="52" y="183">language</text>
+<line class="sep" x1="40" x2="280" y1="190" y2="190"/>
+<text class="col" x="52" y="207">types</text>
+<line class="sep" x1="40" x2="280" y1="214" y2="214"/>
+<text class="col" x="52" y="231">attributes</text>
+<line class="sep" x1="40" x2="280" y1="238" y2="238"/>
+<text class="col" x="52" y="255">isOriginalTitle</text>
+</g>
+<g><rect class="box" x="40" y="560" width="240" height="132" rx="4"/>
+<path class="hdr" d="M44,560 H276 Q280,560 280,564 V590 H40 V564 Q40,560 44,560 Z"/>
+<text class="hname" x="52" y="580">title_episode</text>
+<text class="col" x="52" y="607">tconst</text>
+<text class="key" x="268" y="607" text-anchor="end">PK FK</text>
+<line class="sep" x1="40" x2="280" y1="614" y2="614"/>
+<text class="col" x="52" y="631">parentTconst</text>
+<text class="key" x="268" y="631" text-anchor="end">FK</text>
+<line class="sep" x1="40" x2="280" y1="638" y2="638"/>
+<text class="col" x="52" y="655">seasonNumber</text>
+<line class="sep" x1="40" x2="280" y1="662" y2="662"/>
+<text class="col" x="52" y="679">episodeNumber</text>
+</g>
+<g><rect class="box" x="330" y="40" width="240" height="84" rx="4"/>
+<path class="hdr" d="M334,40 H566 Q570,40 570,44 V70 H330 V44 Q330,40 334,40 Z"/>
+<text class="hname" x="342" y="60">title_genre</text>
+<text class="col" x="342" y="87">tconst</text>
+<text class="key" x="558" y="87" text-anchor="end">PK FK</text>
+<line class="sep" x1="330" x2="570" y1="94" y2="94"/>
+<text class="col" x="342" y="111">genre</text>
+<text class="key" x="558" y="111" text-anchor="end">PK</text>
+</g>
+<g><rect class="box" x="330" y="300" width="240" height="228" rx="4"/>
+<path class="hdr" d="M334,300 H566 Q570,300 570,304 V330 H330 V304 Q330,300 334,300 Z"/>
+<text class="hname" x="342" y="320">title</text>
+<text class="col" x="342" y="347">tconst</text>
+<text class="key" x="558" y="347" text-anchor="end">PK</text>
+<line class="sep" x1="330" x2="570" y1="354" y2="354"/>
+<text class="col" x="342" y="371">titleType</text>
+<line class="sep" x1="330" x2="570" y1="378" y2="378"/>
+<text class="col" x="342" y="395">primaryTitle</text>
+<line class="sep" x1="330" x2="570" y1="402" y2="402"/>
+<text class="col" x="342" y="419">originalTitle</text>
+<line class="sep" x1="330" x2="570" y1="426" y2="426"/>
+<text class="col" x="342" y="443">isAdult</text>
+<line class="sep" x1="330" x2="570" y1="450" y2="450"/>
+<text class="col" x="342" y="467">startYear</text>
+<line class="sep" x1="330" x2="570" y1="474" y2="474"/>
+<text class="col" x="342" y="491">endYear</text>
+<line class="sep" x1="330" x2="570" y1="498" y2="498"/>
+<text class="col" x="342" y="515">runtimeMinutes</text>
+</g>
+<g><rect class="box" x="330" y="640" width="240" height="108" rx="4"/>
+<path class="hdr" d="M334,640 H566 Q570,640 570,644 V670 H330 V644 Q330,640 334,640 Z"/>
+<text class="hname" x="342" y="660">title_rating</text>
+<text class="col" x="342" y="687">tconst</text>
+<text class="key" x="558" y="687" text-anchor="end">PK FK</text>
+<line class="sep" x1="330" x2="570" y1="694" y2="694"/>
+<text class="col" x="342" y="711">averageRating</text>
+<line class="sep" x1="330" x2="570" y1="718" y2="718"/>
+<text class="col" x="342" y="735">numVotes</text>
+</g>
+<g><rect class="box" x="620" y="40" width="240" height="180" rx="4"/>
+<path class="hdr" d="M624,40 H856 Q860,40 860,44 V70 H620 V44 Q620,40 624,40 Z"/>
+<text class="hname" x="632" y="60">title_principal</text>
+<text class="col" x="632" y="87">tconst</text>
+<text class="key" x="848" y="87" text-anchor="end">PK FK</text>
+<line class="sep" x1="620" x2="860" y1="94" y2="94"/>
+<text class="col" x="632" y="111">ordering</text>
+<text class="key" x="848" y="111" text-anchor="end">PK</text>
+<line class="sep" x1="620" x2="860" y1="118" y2="118"/>
+<text class="col" x="632" y="135">nconst</text>
+<text class="key" x="848" y="135" text-anchor="end">FK</text>
+<line class="sep" x1="620" x2="860" y1="142" y2="142"/>
+<text class="col" x="632" y="159">category</text>
+<line class="sep" x1="620" x2="860" y1="166" y2="166"/>
+<text class="col" x="632" y="183">job</text>
+<line class="sep" x1="620" x2="860" y1="190" y2="190"/>
+<text class="col" x="632" y="207">characters</text>
+</g>
+<g><rect class="box" x="620" y="260" width="240" height="84" rx="4"/>
+<path class="hdr" d="M624,260 H856 Q860,260 860,264 V290 H620 V264 Q620,260 624,260 Z"/>
+<text class="hname" x="632" y="280">title_director</text>
+<text class="col" x="632" y="307">tconst</text>
+<text class="key" x="848" y="307" text-anchor="end">PK FK</text>
+<line class="sep" x1="620" x2="860" y1="314" y2="314"/>
+<text class="col" x="632" y="331">nconst</text>
+<text class="key" x="848" y="331" text-anchor="end">PK FK</text>
+</g>
+<g><rect class="box" x="620" y="370" width="240" height="84" rx="4"/>
+<path class="hdr" d="M624,370 H856 Q860,370 860,374 V400 H620 V374 Q620,370 624,370 Z"/>
+<text class="hname" x="632" y="390">title_writer</text>
+<text class="col" x="632" y="417">tconst</text>
+<text class="key" x="848" y="417" text-anchor="end">PK FK</text>
+<line class="sep" x1="620" x2="860" y1="424" y2="424"/>
+<text class="col" x="632" y="441">nconst</text>
+<text class="key" x="848" y="441" text-anchor="end">PK FK</text>
+</g>
+<g><rect class="box" x="620" y="480" width="240" height="84" rx="4"/>
+<path class="hdr" d="M624,480 H856 Q860,480 860,484 V510 H620 V484 Q620,480 624,480 Z"/>
+<text class="hname" x="632" y="500">person_known_for</text>
+<text class="col" x="632" y="527">nconst</text>
+<text class="key" x="848" y="527" text-anchor="end">PK FK</text>
+<line class="sep" x1="620" x2="860" y1="534" y2="534"/>
+<text class="col" x="632" y="551">tconst</text>
+<text class="key" x="848" y="551" text-anchor="end">PK FK</text>
+</g>
+<g><rect class="box" x="910" y="120" width="240" height="84" rx="4"/>
+<path class="hdr" d="M914,120 H1146 Q1150,120 1150,124 V150 H910 V124 Q910,120 914,120 Z"/>
+<text class="hname" x="922" y="140">person_profession</text>
+<text class="col" x="922" y="167">nconst</text>
+<text class="key" x="1138" y="167" text-anchor="end">PK FK</text>
+<line class="sep" x1="910" x2="1150" y1="174" y2="174"/>
+<text class="col" x="922" y="191">profession</text>
+<text class="key" x="1138" y="191" text-anchor="end">PK</text>
+</g>
+<g><rect class="box" x="910" y="300" width="240" height="132" rx="4"/>
+<path class="hdr" d="M914,300 H1146 Q1150,300 1150,304 V330 H910 V304 Q910,300 914,300 Z"/>
+<text class="hname" x="922" y="320">person</text>
+<text class="col" x="922" y="347">nconst</text>
+<text class="key" x="1138" y="347" text-anchor="end">PK</text>
+<line class="sep" x1="910" x2="1150" y1="354" y2="354"/>
+<text class="col" x="922" y="371">primaryName</text>
+<line class="sep" x1="910" x2="1150" y1="378" y2="378"/>
+<text class="col" x="922" y="395">birthYear</text>
+<line class="sep" x1="910" x2="1150" y1="402" y2="402"/>
+<text class="col" x="922" y="419">deathYear</text>
+</g>
+</svg>
+</div>
+<h2>How to read it</h2>
+<div style="overflow-x:auto"><table>
+<tr><th>Symbol</th><th>Meaning</th></tr>
+<tr><td><svg width="60" height="20" style="min-width:0"><line x1="0" y1="10" x2="60" y2="10" class="rel"/><line x1="46" y1="10" x2="60" y2="3" class="rel"/><line x1="46" y1="10" x2="60" y2="17" class="rel"/></svg></td><td>Crow's foot: the "many" side</td></tr>
+<tr><td><svg width="60" height="20" style="min-width:0"><line x1="0" y1="10" x2="60" y2="10" class="rel"/><line x1="51" y1="3" x2="51" y2="17" class="rel"/><line x1="55" y1="3" x2="55" y2="17" class="rel"/></svg></td><td>Double bar: the "one" side</td></tr>
+<tr><td style="color:var(--rust);font-weight:600">PK</td><td>Primary key. Two PK columns in one table form a composite key.</td></tr>
+<tr><td style="color:var(--rust);font-weight:600">FK</td><td>Foreign key, pointing to the PK of the table the line connects to</td></tr>
+</table></div>
+<h2>Notes</h2>
+<ul>
+<li><code>title_rating</code> is 1:1 with <code>title</code>. Its PK is also its FK.</li>
+<li><code>title_episode</code> links to <code>title</code> twice: <code>tconst</code> (the episode itself, 1:1) and <code>parentTconst</code> (the series, one series to many episodes).</li>
+<li><code>title_principal</code>, <code>title_director</code>, <code>title_writer</code>, and <code>person_known_for</code> are bridge tables between <code>title</code> and <code>person</code>. In <code>title_principal</code>, <code>nconst</code> is an FK but not part of the PK, because one person can hold more than one role in the same title.</li>
+<li>In this design, genre is stored as text in <code>title_genre</code>. There is no separate genre table.</li>
+</ul>
+</main></body></html>
