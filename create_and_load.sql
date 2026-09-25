@@ -435,3 +435,152 @@ ANALYZE;
 -- SECTION 4: EXPLORATION + VALIDATION (Role D)
 -- Paste Anu's queries here.
 -- ============================================================
+-- 1. VALIDATION: every table is populated.
+SELECT 'title'             AS table_name, COUNT(*) AS rows FROM title
+UNION ALL SELECT 'title_rating',      COUNT(*) FROM title_rating
+UNION ALL SELECT 'title_genre',       COUNT(*) FROM title_genre
+UNION ALL SELECT 'title_principal',   COUNT(*) FROM title_principal
+UNION ALL SELECT 'title_director',    COUNT(*) FROM title_director
+UNION ALL SELECT 'title_writer',      COUNT(*) FROM title_writer
+UNION ALL SELECT 'title_aka',         COUNT(*) FROM title_aka
+UNION ALL SELECT 'title_episode',     COUNT(*) FROM title_episode
+UNION ALL SELECT 'person',            COUNT(*) FROM person
+UNION ALL SELECT 'person_known_for',  COUNT(*) FROM person_known_for
+UNION ALL SELECT 'person_profession', COUNT(*) FROM person_profession
+ORDER BY rows DESC;
+
+
+-- 2. VALIDATION: column types are correct, not TEXT or FLOAT.
+SELECT table_name, column_name, data_type
+FROM information_schema.columns
+WHERE table_schema = 'public'
+  AND table_name IN ('title', 'title_rating', 'person')
+ORDER BY table_name, ordinal_position;
+
+
+-- 3. VALIDATION: foreign-key integrity. Every count must be 0.
+SELECT 'ratings with no title' AS integrity_check, COUNT(*) AS violations
+FROM title_rating r
+LEFT JOIN title t ON t.tconst = r.tconst
+WHERE t.tconst IS NULL
+UNION ALL
+SELECT 'genres with no title', COUNT(*)
+FROM title_genre g
+LEFT JOIN title t ON t.tconst = g.tconst
+WHERE t.tconst IS NULL
+UNION ALL
+SELECT 'principals with no person', COUNT(*)
+FROM title_principal p
+LEFT JOIN person n ON n.nconst = p.nconst
+WHERE n.nconst IS NULL;
+
+
+-- 4. VALIDATION: spot-check three known titles against the raw TSV.
+-- Expected: Shawshank 1994/142min, Dark Knight 2008/152min,
+-- Endgame 2019/181min.
+SELECT t.tconst,
+       t.primary_title,
+       t.start_year,
+       t.runtime_minutes,
+       r.average_rating,
+       r.num_votes,
+       string_agg(g.genre, ', ' ORDER BY g.genre) AS genres
+FROM title t
+LEFT JOIN title_rating r ON r.tconst = t.tconst
+LEFT JOIN title_genre  g ON g.tconst = t.tconst
+WHERE t.tconst IN ('tt0111161', 'tt0468569', 'tt4154796')
+GROUP BY t.tconst, t.primary_title, t.start_year,
+         t.runtime_minutes, r.average_rating, r.num_votes
+ORDER BY r.num_votes DESC;
+
+
+-- 5. VALIDATION: missing-value profile.
+-- 11.6% of titles have no start year and 64% have no runtime. This is
+-- the source data, not a load failure, but it constrains later charts.
+SELECT COUNT(*)                                        AS total_titles,
+       COUNT(*) FILTER (WHERE start_year IS NULL)      AS missing_start_year,
+       COUNT(*) FILTER (WHERE runtime_minutes IS NULL) AS missing_runtime,
+       ROUND(100.0 * COUNT(*) FILTER (WHERE runtime_minutes IS NULL)
+             / COUNT(*), 1)                            AS pct_missing_runtime
+FROM title;
+
+
+-- 6. EXPLORATION: what kind of titles did we load?
+-- Only 5.9% are movies; 77% are TV episodes.
+SELECT title_type,
+       COUNT(*)                                          AS titles,
+       ROUND(100.0 * COUNT(*) / SUM(COUNT(*)) OVER (), 2) AS pct
+FROM title
+GROUP BY title_type
+ORDER BY titles DESC;
+
+
+-- 7. EXPLORATION: movie output per decade.
+-- Output roughly quadrupled between the 1990s and the 2010s.
+SELECT (start_year / 10) * 10 AS decade,
+       COUNT(*)               AS movies
+FROM title
+WHERE title_type = 'movie'
+  AND (start_year BETWEEN 1900 AND 2029)
+GROUP BY decade
+ORDER BY decade;
+
+
+-- 8. EXPLORATION: rating and volume by genre.
+-- Joins three tables, aggregates, and filters out films with too few
+-- votes to be meaningful. Documentary rates highest; Drama dominates
+-- volume; Horror rates lowest despite high output.
+SELECT g.genre,
+       COUNT(DISTINCT t.tconst)        AS movies,
+       ROUND(AVG(r.average_rating), 2) AS avg_rating
+FROM title t
+JOIN title_genre  g ON g.tconst = t.tconst
+JOIN title_rating r ON r.tconst = t.tconst
+WHERE t.title_type = 'movie'
+  AND r.num_votes >= 1000
+GROUP BY g.genre
+HAVING COUNT(DISTINCT t.tconst) >= 50
+ORDER BY avg_rating DESC;
+
+
+-- 9. EXPLORATION: directors with the highest average movie ratings.
+-- Joins person to title through the title_director bridge table. The
+-- HAVING floor requires a real filmography. Doubles as a sanity check:
+-- the result is Nolan, Satyajit Ray, Miyazaki, Kurosawa, Kubrick.
+SELECT p.primary_name                  AS director,
+       COUNT(DISTINCT t.tconst)        AS movies,
+       ROUND(AVG(r.average_rating), 2) AS avg_rating
+FROM title_director d
+JOIN person p       ON p.nconst = d.nconst
+JOIN title t        ON t.tconst = d.tconst
+JOIN title_rating r ON r.tconst = t.tconst
+WHERE t.title_type = 'movie'
+  AND r.num_votes >= 1000
+GROUP BY p.nconst, p.primary_name
+HAVING COUNT(DISTINCT t.tconst) >= 10
+ORDER BY avg_rating DESC
+LIMIT 15;
+
+
+-- 10. EXPLORATION: ratings and votes by era.
+-- Median as well as mean, because vote counts are heavily skewed by a
+-- few blockbusters.
+SELECT CASE
+           WHEN start_year < 1970 THEN 'Pre-1970'
+           WHEN start_year < 1990 THEN '1970-1989'
+           WHEN start_year < 2005 THEN '1990-2004'
+           WHEN start_year < 2015 THEN '2005-2014'
+           ELSE                        '2015+'
+       END                                             AS era,
+       COUNT(*)                                        AS movies,
+       ROUND(AVG(r.average_rating), 2)                 AS avg_rating,
+       ROUND((PERCENTILE_CONT(0.5) WITHIN GROUP
+             (ORDER BY r.average_rating))::numeric, 2) AS median_rating,
+       ROUND((PERCENTILE_CONT(0.5) WITHIN GROUP
+             (ORDER BY r.num_votes))::numeric)         AS median_votes
+FROM title t
+JOIN title_rating r ON r.tconst = t.tconst
+WHERE t.title_type = 'movie'
+  AND t.start_year IS NOT NULL
+GROUP BY era
+ORDER BY era;
