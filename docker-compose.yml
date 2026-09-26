@@ -1,0 +1,48 @@
+services:
+  postgres:
+    image: postgres:18
+    container_name: project_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: imdb_project
+    ports:
+      - "5432:5432"       # exposes Postgres to your host too (for pgAdmin/psql outside Docker, DBeaver, etc.)
+    volumes:
+      - pgdata:/var/lib/postgresql
+      - ./data:/data          # drop raw IMDB files in ./data; COPY paths like '/data/title.basics.tsv' will resolve
+    networks:
+      - project_net
+ 
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: project_pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@example.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"          # open http://localhost:5050
+    depends_on:
+      - postgres
+    networks:
+      - project_net
+ 
+  metabase:
+    image: metabase/metabase:latest
+    container_name: project_metabase
+    restart: unless-stopped
+    ports:
+      - "3000:3000"        # open http://localhost:3000
+    depends_on:
+      - postgres
+    networks:
+      - project_net
+ 
+networks:
+  project_net:
+    driver: bridge
+ 
+volumes:
+  pgdata:
