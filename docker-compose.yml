@@ -3,6 +3,7 @@ services:
     image: postgres:18
     container_name: project_postgres
     restart: unless-stopped
+    shm_size: '1gb'   # default 64MB is too small for parallel hash joins on large tables
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
@@ -11,10 +12,11 @@ services:
       - "5432:5432"       # exposes Postgres to your host too (for pgAdmin/psql outside Docker, DBeaver, etc.)
     volumes:
       - pgdata:/var/lib/postgresql
-      - ./data:/data          # drop raw IMDB files in ./data; COPY paths like '/data/title.basics.tsv' will resolve
+      - ./data:/data          # used by create_and_load_local.sql (absolute /data/... paths)
+      - ./data:/rawdata       # used by create_and_load.sql (relative rawdata/... paths)
     networks:
       - project_net
- 
+
   pgadmin:
     image: dpage/pgadmin4
     container_name: project_pgadmin
@@ -28,7 +30,7 @@ services:
       - postgres
     networks:
       - project_net
- 
+
   metabase:
     image: metabase/metabase:latest
     container_name: project_metabase
@@ -39,10 +41,10 @@ services:
       - postgres
     networks:
       - project_net
- 
+
 networks:
   project_net:
     driver: bridge
- 
+
 volumes:
   pgdata:
