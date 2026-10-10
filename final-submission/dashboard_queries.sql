@@ -108,19 +108,20 @@ ORDER BY "Rank Gap" DESC;
 
 -- =========================================================
 -- Chart 5 — "Highest-Rated Prolific Actors"
--- Chart type: Bar
+-- Chart type: Row Bar
 -- =========================================================
-SELECT p.primary_name                      AS "Actor",
-       COUNT(DISTINCT t.tconst)            AS "Movies",
-       ROUND(AVG(r.average_rating), 2)     AS "Avg Rating"
+SELECT
+    p.primary_name AS "Actor",
+    COUNT(DISTINCT t.tconst) AS "Movies",
+    ROUND(AVG(r.average_rating), 2) AS "Avg Rating"
 FROM title_principal tp
-JOIN title        t ON t.tconst  = tp.tconst
-JOIN person        p ON p.nconst = tp.nconst
-JOIN title_rating  r ON r.tconst = t.tconst
+JOIN title t ON t.tconst = tp.tconst
+JOIN person p ON p.nconst = tp.nconst
+JOIN title_rating r ON r.tconst = t.tconst
 WHERE t.title_type = 'movie'
   AND tp.category IN ('actor', 'actress')
   AND r.num_votes >= 50000
-GROUP BY p.primary_name
+GROUP BY p.nconst, p.primary_name
 HAVING COUNT(DISTINCT t.tconst) >= 10
 ORDER BY "Avg Rating" DESC
 LIMIT 15;
@@ -128,7 +129,7 @@ LIMIT 15;
 
 -- =========================================================
 -- Chart 6 — "Rating Difference by Genre"
--- Chart type: Bar
+-- Chart type: Row Bar
 -- =========================================================
 WITH eligible_movies AS (
     SELECT
@@ -175,7 +176,7 @@ ORDER BY gap DESC, genre;
 
 -- =========================================================
 -- Chart 7 — "What Netflix Killed"
--- Chart type: Bar
+-- Chart type: Line graph
 -- =========================================================
 WITH seasons AS (
   SELECT parent_tconst, season_number, COUNT(*) AS eps
@@ -198,7 +199,7 @@ ORDER BY 1;
 
 -- =========================================================
 -- Chart 8 — "Proportion of Movies > 8/10"
--- Chart type: Bar
+-- Chart type: Pie chart
 -- =========================================================
 WITH eligible_movies AS (
     SELECT
@@ -235,7 +236,7 @@ ORDER BY rating_category;
 
 -- =========================================================
 -- Chart 9 — "The Magic of 40 for Directors"
--- Chart type: Bar
+-- Chart type: Line chart
 -- =========================================================
 SELECT ((t.start_year - p.birth_year) / 5) * 5 AS director_age,
        ROUND(AVG(r.average_rating), 2) AS avg_rating,
@@ -253,7 +254,7 @@ ORDER BY 1;
 
 -- =========================================================
 -- Chart 10 — "Movies Released Per Year, 1920 to 2025"
--- Chart type: Bar
+-- Chart type: line graph 
 -- =========================================================
 WITH per_year AS (
     SELECT t.start_year AS year,
