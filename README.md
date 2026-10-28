@@ -15,14 +15,79 @@ has already been set up before:
 docker ps -a --filter "name=project_postgres" --format "{{.Names}}: {{.Status}}"
 ```
 
-- **Prints nothing** → this machine has never run the stack. Do
-  **First-time setup** below, steps 1–6, in order.
+- **Prints nothing** → this machine has never run the stack. Either run
+  `./composer.sh` (see **Scripted setup and teardown** below), or do
+  **First-time setup** steps 1–6 by hand, in order.
 - **Prints a line** (any status — `Up`, `Exited`, doesn't matter) → the
   containers already exist here, which means the database was already
   created and loaded, and Metabase was already connected, in an earlier
   session. Skip straight to **Resuming on an already-set-up machine**
   further down — don't repeat steps 1–6, and specifically don't run
   `docker compose up -d` or re-run `create_and_load.sql`.
+
+---
+
+## Scripted setup and teardown
+
+Two scripts in the project root automate the whole lifecycle. Run them
+from a bash terminal (macOS or Linux) in the project folder, with Docker
+installed.
+
+### Build everything: `composer.sh`
+
+```bash
+./composer.sh            # build; skips the load if imdb is already loaded
+./composer.sh --reload   # drop and reload the imdb database from scratch
+```
+
+It runs First-time setup steps 2–4 for you:
+
+1. Asks you to start Docker Desktop. Open the app, wait until it shows as
+   running, then type `y` or `yes`. If Docker isn't ready yet it asks
+   again; any other answer exits without changing anything.
+2. Runs `download_data.sh`, which downloads only the raw files missing
+   from `data/` and shows a progress bar for each.
+3. Runs `docker compose up -d` to pull the images and start Postgres,
+   pgAdmin and Metabase.
+4. Waits for Postgres, then runs `create_and_load.sql`, unless the `title`
+   table already has rows. This takes a long time on the full dataset.
+   Output goes to `load.log`, and any errors are printed at the end.
+5. Prints the row count of `title` and the URLs for pgAdmin and Metabase.
+
+Afterwards, do step 6 (connect Metabase) if this is the first build on
+this machine. If `metabase-data/` already exists from an earlier build,
+Metabase restores your admin account, database connection and dashboards
+automatically, so just sign in. pgAdmin keeps nothing between rebuilds:
+register the server again with host `postgres`, port `5432`, database
+`imdb`.
+
+### Remove everything: `teardown.sh`
+
+```bash
+./teardown.sh               # remove everything, including the raw data
+./teardown.sh --keep-data   # keep data/*.tsv so the next build skips the download
+./teardown.sh -y            # skip the delete confirmation
+```
+
+After the same Docker Desktop question, it asks you to confirm, then
+permanently removes:
+
+| Removed | Approx. size | Comes back with |
+|---|---|---|
+| The `pgdata` volume (the loaded `imdb` database) | ~31 GB | `composer.sh` (reload) |
+| The postgres, pgAdmin and Metabase images | ~2 GB | `composer.sh` (pull) |
+| The three containers and the project network | <1 GB | `composer.sh` |
+| `data/*.tsv`, unless `--keep-data` is passed | ~10 GB | `composer.sh` (download) |
+
+It **keeps** `metabase-data/`, so the next `./composer.sh` restores your
+Metabase setup. Tables, views or indexes created by hand in `imdb` that
+aren't in `create_and_load.sql` are lost.
+
+To rebuild after a teardown, run `./composer.sh`.
+
+`metabase-data/` exists only on your machine; `.gitignore` keeps it out
+of the repo because it contains the Metabase admin login. Teammates
+cloning the repo set up Metabase themselves in step 6.
 
 ---
 
@@ -35,7 +100,8 @@ docker ps -a --filter "name=project_postgres" --format "{{.Names}}: {{.Status}}"
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/) (Mac/Windows)
   or Docker Engine + Compose plugin (Linux)
 - `git`, `curl` (for the optional download script)
-- A few GB of free disk space (raw IMDb files + Postgres volume)
+- About 45 GB of free disk space: ~10 GB raw IMDb files, ~31 GB loaded
+  Postgres volume, ~2 GB Docker images
 
 ### 1. Clone this repo
 
@@ -147,6 +213,10 @@ SELECT * FROM title WHERE tconst = 'tt0111161';  -- The Shawshank Redemption
 3. Save, let it sync, then confirm all 11 tables are browsable and a
    question against any table returns real rows.
 
+Metabase saves this setup, along with your questions and dashboards, in
+`metabase-data/` in the project folder. It survives `teardown.sh` and is
+never committed.
+
 ---
 
 ## Resuming on an already-set-up machine
@@ -187,6 +257,10 @@ empty data volume alongside the real one. `docker start` resumes the exact
 containers and volume you already have, regardless of which folder you're
 running it from.
 
+The same applies to `composer.sh`, which runs `docker compose up -d`. Run
+it only from the folder the stack was first built in, or after
+`teardown.sh`.
+
 ## Troubleshooting
 
 - **Container stuck "Restarting"** — usually a Postgres major-version
@@ -217,7 +291,13 @@ running it from.
   already exist, then use `docker start project_postgres project_pgadmin
   project_metabase` instead (see "Resuming on an already-set-up machine"
   above) rather than recreating them. Don't run `docker compose down -v`
-  to "fix" this — it destroys the volume holding the already-loaded data.
+  or `teardown.sh` to "fix" this — both destroy the volume holding the
+  already-loaded data.
+- **`composer.sh` stops at the unzip step with "not in gzip format"** — a
+  download failed partway, usually a network blip or an IMDb server error.
+  Run `./composer.sh` again; it re-downloads only the missing files.
+- **`composer.sh` prints "WARNING: the load reported errors"** — open
+  `load.log` for the full output of `create_and_load.sql`.
 
 ## Repo structure
 
@@ -225,9 +305,14 @@ running it from.
 .
 ├── docker-compose.yml     # Postgres + pgAdmin + Metabase, one shared network
 ├── create_and_load.sql    # creates DB, tables, loads data, adds keys, runs validation queries
-├── download_data.sh       # optional: fetches the 7 raw IMDb files into data/
+├── composer.sh            # builds everything: download, start containers, load imdb
+├── teardown.sh            # removes containers, images, volume and raw data
+├── download_data.sh       # fetches the 7 raw IMDb files into data/ (run by composer.sh)
 ├── data/                  # raw IMDb .tsv files — not committed, see step 2
+├── metabase-data/         # Metabase settings and dashboards — local only, not committed
+├── load.log               # output of the last load by composer.sh — not committed
 ├── imdb_er_diagram.html   # entity-relationship diagram for the schema
+├── .gitignore
 ├── LICENSE
 └── README.md
 ```

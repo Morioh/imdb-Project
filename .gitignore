@@ -1,0 +1,7 @@
+# Metabase settings: contains the admin login and saved database password
+metabase-data/
+# Raw IMDb files (~10 GB); fetched by download_data.sh
+data/*.tsv
+data/*.tsv.gz
+# Output of composer.sh
+load.log
